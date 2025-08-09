@@ -1,0 +1,51 @@
+**Produto:** WOD Connect (nome provisório)
+
+**Descrição da ideia:**
+Um web app com versão futura para mobile que gera WODs completos personalizados usando IA, com recursos sociais onde alunos e coaches podem salvar, compartilhar, comentar e criar desafios.
+
+**Jornada/fluxo do usuário:**
+
+* Abre o app
+* Escolhe entre preencher parâmetros (nível, objetivo, equipamento) ou digitar um prompt livre
+* IA (OpenAI) gera um WOD personalizado
+* Usuário visualiza, salva, edita e/ou compartilha o treino
+* Pode curtir, comentar e seguir outros perfis
+* Participa de desafios e interage em grupos
+* Usuários premium podem criar desafios e grupos
+
+**Público-alvo:**
+
+* Alunos que treinam sozinhos e buscam ideias de treinos variados
+* Coaches que precisam de agilidade e inspiração para montar aulas personalizadas
+
+**Funcionalidades principais:**
+
+* Geração de WODs com IA (parâmetros ou prompt livre)
+* Edição e salva de treinos
+* Biblioteca de WODs pessoais e públicos
+* Upload de fotos e vídeos em treinos e perfil
+* Curtidas, comentários e seguidores
+* Feed estilo Instagram
+* Mensagens diretas
+* Grupos de treino
+* Desafios comunitários
+* Criação de desafios e grupos (recurso premium)
+
+**Stack sugerido:**
+
+* Supabase (auth, banco de dados, storage)
+* OpenAI gpt-5 (gerador de WODs)
+* Web app responsivo no lançamento
+
+
+**Visual/design:**
+
+* Mantenha o estilo já existente no projeto
+
+**Funcionalidades futuras:**
+
+* Gamificação (badges, XP por completar WODs)
+* WODs em vídeo ao vivo
+* Ranking semanal
+* Explorar por tags/equipamento
+* Notificações push no app nativo
