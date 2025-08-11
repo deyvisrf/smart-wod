@@ -49,3 +49,42 @@ Um web app com versão futura para mobile que gera WODs completos personalizados
 * Ranking semanal
 * Explorar por tags/equipamento
 * Notificações push no app nativo
+
+
+---
+
+## Roadmap de Implementação (reordenado)
+
+Observação: a integração com Supabase (Auth, DB, Storage, RLS/Policies) ficará por último, para acelerar entregas de UI/UX e lógica do domínio.
+
+1) Geração de WOD com IA
+   - Tela "Criar Treino" (parâmetros e prompt livre)
+   - Ação server-side para chamar OpenAI e retornar um WOD estruturado
+   - Temporariamente sem persistência real (somente exibição/compartilhamento local)
+
+2) Biblioteca de WODs (MVP sem backend)
+   - Salvar/editar/excluir em armazenamento local (localStorage) como provisório
+   - Lista "Meus WODs" e tela de detalhe
+
+3) Feed e interações sociais (MVP)
+   - UI de feed com dados mockados
+   - Curtir/comentar de forma otimista local (sem backend por enquanto)
+
+4) Upload e mídia (provisório)
+   - Upload/preview de imagens (opção: Vercel Blob como storage temporário)
+   - Exibir mídia no detalhe do WOD
+
+5) Mensagens (MVP mock)
+   - Lista de conversas e envio de mensagens com dados simulados
+
+6) Grupos e desafios (MVP)
+   - Criar/listar grupos e desafios, com lógica básica e dados locais
+
+7) Premium (gate básico)
+   - Flag local para travar criação de alguns recursos
+
+8) Integração completa Supabase (última etapa)
+   - Auth por e-mail/senha e OAuth Google
+   - Tabelas, RLS e Policies
+   - Migração das telas para usar DB/Storage real (workouts, likes, comments, follows, media, groups, challenges, messages)
+   - Ajuste do feed e das interações para leitura/escrita no backend

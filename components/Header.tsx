@@ -3,6 +3,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+
+const CreateWorkoutModal = dynamic(() => import('./CreateWorkoutModal'), { ssr: false });
 
 export default function Header() {
   const [showNotifications, setShowNotifications] = useState(false);
@@ -33,6 +36,8 @@ export default function Header() {
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showProfileMenu]);
+
+  const [openCreate, setOpenCreate] = useState(false);
 
   return (
     <header className="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 lg:left-72 z-40 shadow-sm">
@@ -74,7 +79,7 @@ export default function Header() {
               <i className="ri-search-line text-xl text-gray-600"></i>
             </button>
             
-            <button className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-2 lg:px-6 lg:py-2 rounded-full font-medium hover:from-purple-600 hover:to-pink-600 transition-all cursor-pointer whitespace-nowrap shadow-md text-sm lg:text-base">
+            <button onClick={() => setOpenCreate(true)} className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-2 lg:px-6 lg:py-2 rounded-full font-medium hover:from-purple-600 hover:to-pink-600 transition-all cursor-pointer whitespace-nowrap shadow-md text-sm lg:text-base">
               <span className="hidden sm:inline">+ Criar Treino</span>
               <span className="sm:hidden">+</span>
             </button>
@@ -194,7 +199,7 @@ export default function Header() {
                   <span className="font-medium">Feed</span>
                 </a>
                 <a href="/wods" className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100">
-                  <i className="ri-dumbbell-line text-lg"></i>
+                  <i className="ri-dumbbell-fill text-lg text-current"></i>
                   <span className="font-medium">Meus WODs</span>
                 </a>
                 <a href="/groups" className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100">
@@ -250,6 +255,9 @@ export default function Header() {
             </div>
           </div>
         </div>
+      )}
+      {openCreate && (
+        <CreateWorkoutModal open={openCreate} onClose={() => setOpenCreate(false)} />
       )}
     </header>
   );

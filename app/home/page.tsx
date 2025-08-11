@@ -83,18 +83,6 @@ export default function HomePage() {
     },
   ];
 
-  const hashtags = [
-    { tag: 'social', count: 5 },
-    { tag: 'beehive', count: 4 },
-    { tag: 'kaliningradlive', count: 1 },
-    { tag: 'awesome', count: 1 },
-    { tag: 'photos', count: 1 },
-    { tag: 'network', count: 1 },
-    { tag: 'shop', count: 1 },
-    { tag: 'videos', count: 1 },
-    { tag: 'community', count: 1 },
-    { tag: 'hope', count: 1 },
-  ];
 
   const suggestions = [
     { name: 'Sophia Lee', avatar: 'S', time: '3 anos atrás' },
@@ -117,26 +105,6 @@ export default function HomePage() {
             </div>
 
             <div className="space-y-4 lg:space-y-6 order-1 xl:order-2">
-              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100">
-                <h3 className="text-base lg:text-lg font-bold text-gray-900 mb-3 lg:mb-4 flex items-center gap-2">
-                  <span className="text-purple-600">#</span>
-                  Hashtags
-                </h3>
-                <div className="space-y-2 lg:space-y-3">
-                  {hashtags.slice(0, 6).map((item, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <span className="text-purple-600 font-medium cursor-pointer hover:text-purple-700 text-sm lg:text-base">
-                        #{item.tag}
-                      </span>
-                      <span className="text-gray-500 text-xs lg:text-sm">{item.count}</span>
-                    </div>
-                  ))}
-                  <button className="text-purple-600 hover:text-purple-700 text-sm font-medium cursor-pointer">
-                    Ver mais
-                  </button>
-                </div>
-              </div>
-
               <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100">
                 <h3 className="text-base lg:text-lg font-bold text-gray-900 mb-3 lg:mb-4">Sugestões</h3>
                 <div className="space-y-3 lg:space-y-4">

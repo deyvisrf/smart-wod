@@ -6,7 +6,7 @@ import Link from 'next/link';
 export default function Sidebar() {
   const menuItems = [
     { icon: 'ri-home-fill', label: 'Feed', href: '/', active: true },
-    { icon: 'ri-dumbbell-line', label: 'Meus WODs', href: '/wods' },
+    { icon: 'ri-dumbbell-fill', label: 'Meus WODs', href: '/wods' },
     { icon: 'ri-group-line', label: 'Grupos', href: '/groups' },
     { icon: 'ri-trophy-line', label: 'Desafios', href: '/challenges' },
     { icon: 'ri-message-3-line', label: 'Mensagens', href: '/messages', hasNotification: true },
@@ -34,7 +34,7 @@ export default function Sidebar() {
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
             >
-              <i className={`${item.icon} text-lg`}></i>
+              <i className={`${item.icon} text-lg text-current`}></i>
               <span className="font-medium">{item.label}</span>
               {item.hasNotification && (
                 <div className="absolute right-3 w-2 h-2 bg-red-500 rounded-full"></div>
