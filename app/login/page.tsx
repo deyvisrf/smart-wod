@@ -18,7 +18,7 @@ export default function LoginPage() {
       try {
         localStorage.setItem('isLoggedIn', '1');
       } catch {}
-      window.location.href = '/';
+      window.location.href = '/home';
     } finally {
       // mantemos o estado até redirecionar
     }

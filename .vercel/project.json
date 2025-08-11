@@ -1,1 +1,16 @@
-{"projectId":"prj_bCa34HVy0KYAbXfOp2PBLNZ9aphY","orgId":"team_Ecjd1B3K3wnR1cCiYID6CZ0U","projectName":"wod2"}
+{
+  "projectId": "prj_bCa34HVy0KYAbXfOp2PBLNZ9aphY",
+  "orgId": "team_Ecjd1B3K3wnR1cCiYID6CZ0U",
+  "projectName": "wod2",
+  "settings": {
+    "createdAt": 1754781824422,
+    "framework": "nextjs",
+    "devCommand": null,
+    "installCommand": "npm install",
+    "buildCommand": "",
+    "outputDirectory": "",
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "20.x"
+  }
+}
