@@ -34,7 +34,73 @@ export default function CreateWorkoutPage() {
     prompt: '',
   });
   const [status, setStatus] = useState<'idle' | 'loading'>('idle');
+  const [quickType, setQuickType] = useState<
+    'surprise' | 'quickMinimal' | 'endurance' | 'beginners' | null
+  >(null);
   const [wod, setWod] = useState<GeneratedWod | null>(null);
+
+  const runQuick = async (
+    type: 'surprise' | 'quickMinimal' | 'endurance' | 'beginners',
+  ) => {
+    setStatus('loading');
+    setQuickType(type);
+    setWod(null);
+    try {
+      const base = {
+        level: form.level,
+        goal: form.goal,
+        equipment: form.equipment,
+        duration: Number(form.duration) || 30,
+        style: form.style,
+        preset: form.preset,
+        includeLoads: form.includeLoads,
+        prompt: form.prompt,
+      };
+      let input = base;
+      if (type === 'surprise') {
+        input = {
+          ...base,
+          goal: 'Surpresa do dia',
+          prompt:
+            'WOD surpresa para hoje. Varie estímulos, use terminologia CrossFit e mantenha instruções objetivas. Evite explicações longas.',
+        };
+      } else if (type === 'quickMinimal') {
+        input = {
+          ...base,
+          goal: 'Treino rápido',
+          equipment: ['Livre'],
+          duration: Math.min(20, base.duration),
+          style: 'AMRAP',
+          prompt:
+            'Treino rápido (10-20 min) com equipamento mínimo (idealmente apenas peso corporal). Alta densidade e transições fáceis.',
+        };
+      } else if (type === 'endurance') {
+        input = {
+          ...base,
+          goal: 'Resistência',
+          duration: Math.max(30, base.duration),
+          style: 'For Time',
+          prompt:
+            'WOD focado em resistência aeróbica e muscular. Volume contínuo, pace sustentável, movimentos cíclicos.',
+        };
+      } else if (type === 'beginners') {
+        input = {
+          ...base,
+          level: 'Iniciante',
+          goal: 'Movimentos básicos',
+          equipment: ['Livre'],
+          style: 'EMOM',
+          prompt:
+            'WOD para iniciantes com movimentos básicos e baixo impacto. Ênfase em técnica e consistência.',
+        };
+      }
+      const result = await generateWodAction(input);
+      setWod(result);
+    } finally {
+      setStatus('idle');
+      setQuickType(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,122 +128,76 @@ export default function CreateWorkoutPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Criar Treino</h1>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 lg:p-6 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nível</label>
-              <select
-                value={form.level}
-                onChange={(e) => setForm({ ...form, level: e.target.value })}
-                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2"
-              >
-                <option>Iniciante</option>
-                <option>Intermediário</option>
-                <option>Avançado</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Formato do treino</label>
-              <select
-                value={form.style}
-                onChange={(e) => setForm({ ...form, style: e.target.value as any })}
-                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2"
-              >
-                <option>AMRAP</option>
-                <option>EMOM</option>
-                <option>For Time</option>
-                <option>Chipper</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Preset</label>
-              <select
-                value={form.preset}
-                onChange={(e) => setForm({ ...form, preset: e.target.value as any })}
-                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2"
-              >
-                <option>RX</option>
-                <option>Scaled</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Objetivo</label>
-              <input
-                value={form.goal}
-                onChange={(e) => setForm({ ...form, goal: e.target.value })}
-                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2"
-                placeholder="Força, Condicionamento, HIIT, etc."
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Equipamentos disponíveis</label>
-              <div className="grid grid-cols-2 gap-2 bg-gray-50 p-2 rounded-xl border border-gray-200 max-h-40 overflow-auto">
-                {equipmentOptions.map((opt) => {
-                  const checked = form.equipment.includes(opt);
-                  return (
-                    <label key={opt} className="flex items-center gap-2 text-sm text-gray-700">
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={(e) => {
-                          setForm((prev) => {
-                            const next = new Set(prev.equipment);
-                            if (e.target.checked) next.add(opt);
-                            else next.delete(opt);
-                            return { ...prev, equipment: Array.from(next) };
-                          });
-                        }}
-                      />
-                      {opt}
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Duração (min)</label>
-              <input
-                type="number"
-                min={10}
-                max={120}
-                value={form.duration}
-                onChange={(e) => setForm({ ...form, duration: Number(e.target.value) })}
-                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                id="includeLoads"
-                type="checkbox"
-                checked={form.includeLoads}
-                onChange={(e) => setForm({ ...form, includeLoads: e.target.checked })}
-              />
-              <label htmlFor="includeLoads" className="text-sm text-gray-700">Incluir recomendações de carga (M/F)</label>
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
+          <button
+            type="button"
+            onClick={() => runQuick('surprise')}
+            className="w-full h-11 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 font-semibold shadow-md hover:from-purple-600 hover:to-pink-600 disabled:opacity-60 disabled:cursor-not-allowed"
+            disabled={status !== 'idle'}
+          >
+            {quickType === 'surprise' && status === 'loading' ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-r-transparent" />
+                Gerando…
+              </span>
+            ) : (
+              'WOD surpresa para hoje?'
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => runQuick('quickMinimal')}
+            className="w-full h-11 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 font-semibold shadow-md hover:from-purple-600 hover:to-pink-600 disabled:opacity-60 disabled:cursor-not-allowed"
+            disabled={status !== 'idle'}
+          >
+            {quickType === 'quickMinimal' && status === 'loading' ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-r-transparent" />
+                Gerando…
+              </span>
+            ) : (
+              'Treino rápido com equipamento mínimo'
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => runQuick('endurance')}
+            className="w-full h-11 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 font-semibold shadow-md hover:from-purple-600 hover:to-pink-600 disabled:opacity-60 disabled:cursor-not-allowed"
+            disabled={status !== 'idle'}
+          >
+            {quickType === 'endurance' && status === 'loading' ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-r-transparent" />
+                Gerando…
+              </span>
+            ) : (
+              'WOD para desenvolver resistência'
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => runQuick('beginners')}
+            className="w-full h-11 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 font-semibold shadow-md hover:from-purple-600 hover:to-pink-600 disabled:opacity-60 disabled:cursor-not-allowed"
+            disabled={status !== 'idle'}
+          >
+            {quickType === 'beginners' && status === 'loading' ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-r-transparent" />
+                Gerando…
+              </span>
+            ) : (
+              'WOD para iniciantes (movimentos básicos)'
+            )}
+          </button>
+        </div>
+        {status === 'loading' && (
+          <div className="mb-4 rounded-xl border border-purple-200 bg-purple-50 p-3 text-sm text-purple-700 flex items-center gap-2">
+            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-purple-600 border-r-transparent" />
+            Gerando seu WOD…
           </div>
+        )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Instruções adicionais (opcional)</label>
-            <textarea
-              value={form.prompt}
-              onChange={(e) => setForm({ ...form, prompt: e.target.value })}
-              rows={4}
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2"
-              placeholder="Ex.: Priorizar técnica, evitar saltos, sem barra, foco em core…"
-            />
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              disabled={status !== 'idle'}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 px-5 py-2.5 font-semibold text-white shadow-md hover:from-purple-600 hover:to-pink-600 disabled:opacity-60"
-              type="submit"
-            >
-              <i className="ri-dumbbell-fill text-current"></i>
-              {status === 'idle' ? 'Gerar WOD' : 'Gerando…'}
-            </button>
-          </div>
-        </form>
+        {/* Formulário removido: utilize os atalhos acima para gerar WODs rapidamente */}
 
         {wod && (
           <section className="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 lg:p-6">

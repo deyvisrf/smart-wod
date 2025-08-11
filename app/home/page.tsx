@@ -1,10 +1,27 @@
 'use client';
 
+import React from 'react';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
 import WorkoutPost from '../../components/WorkoutPost';
 
 export default function HomePage() {
+  // Carrega posts que o usuário compartilhou via modal (localStorage)
+  const getShared = () => {
+    try {
+      return JSON.parse(typeof window !== 'undefined' ? localStorage.getItem('my_feed_posts') || '[]' : '[]');
+    } catch {
+      return [] as any[];
+    }
+  };
+
+  const [sharedPosts, setSharedPosts] = React.useState<any[]>(getShared());
+
+  React.useEffect(() => {
+    const handler = () => setSharedPosts(getShared());
+    window.addEventListener('wod:shared', handler);
+    return () => window.removeEventListener('wod:shared', handler);
+  }, []);
   const workoutPosts = [
     {
       author: 'Deyvis Ferreira',
@@ -99,6 +116,52 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-6">
             <div className="xl:col-span-2 order-2 xl:order-1">
+              {sharedPosts.map((p, idx) => (
+                <div key={`shared-${p.id ?? idx}`} className="mb-4">
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                          <span className="text-white font-bold text-base lg:text-lg">D</span>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-900 text-sm lg:text-base">Você</h3>
+                          <p className="text-xs lg:text-sm text-gray-500">agora mesmo</p>
+                        </div>
+                      </div>
+                      <span className="px-2 lg:px-3 py-1 rounded-full text-xs lg:text-sm font-medium bg-green-100 text-green-700">Compartilhado</span>
+                    </div>
+                    <h2 className="text-lg lg:text-xl font-bold text-gray-900 mb-3 lg:mb-4">{p.title}</h2>
+                    {p.warmup && (
+                      <div className="mb-3">
+                        <h4 className="text-purple-600 font-semibold mb-2 lg:mb-3 flex items-center gap-2 text-sm lg:text-base">
+                          <i className="ri-fire-line"></i>
+                          {p.warmup.title}
+                        </h4>
+                        <ul className="list-disc pl-6 text-gray-700 space-y-1">
+                          {p.warmup.items?.map((it: string, i: number) => (
+                            <li key={i}>{it}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {p.main && (
+                      <div>
+                        <h4 className="text-purple-600 font-semibold mb-2 flex items-center gap-2 text-sm lg:text-base">
+                          <i className="ri-heart-pulse-line"></i>
+                          {p.main.title}
+                        </h4>
+                        <ul className="list-disc pl-6 text-gray-700 space-y-1">
+                          {p.main.items?.map((it: string, i: number) => (
+                            <li key={i}>{it}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+
               {workoutPosts.map((post, index) => (
                 <WorkoutPost key={index} {...post} />
               ))}

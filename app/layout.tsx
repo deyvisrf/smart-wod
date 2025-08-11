@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Pacifico } from "next/font/google";
 import "./globals.css";
+import Toaster from "../components/Toaster";
 
 const pacifico = Pacifico({
   weight: '400',
@@ -21,7 +22,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "WOD Connect - Rede Social Fitness",
+  title: "SmartWod - Rede Social Fitness",
   description: "Conecte-se com entusiastas do fitness e compartilhe seus treinos",
 };
 
@@ -42,6 +43,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${pacifico.variable} antialiased`}
       >
         {children}
+        <Toaster />
       </body>
     </html>
   );

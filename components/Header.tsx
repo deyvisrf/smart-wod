@@ -57,7 +57,7 @@ export default function Header() {
               <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
                 <i className="ri-dumbbell-fill text-white text-lg"></i>
               </div>
-              <h1 className="text-lg font-bold text-gray-900">WOD Connect</h1>
+              <h1 className="text-lg font-bold text-gray-900">SmartWod</h1>
             </div>
             
             <h2 className="text-xl lg:text-2xl font-bold text-gray-900 hidden lg:block">Feed</h2>
@@ -186,7 +186,7 @@ export default function Header() {
                   <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-md">
                     <i className="ri-dumbbell-fill text-white text-xl"></i>
                   </div>
-                  <h1 className="text-xl font-bold text-gray-900">WOD Connect</h1>
+                  <h1 className="text-xl font-bold text-gray-900">SmartWod</h1>
                 </div>
                 <button onClick={() => setShowMobileMenu(false)} className="w-8 h-8 flex items-center justify-center">
                   <i className="ri-close-line text-xl text-gray-600"></i>

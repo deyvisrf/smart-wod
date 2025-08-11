@@ -20,7 +20,7 @@ export default function Sidebar() {
           <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-md">
             <i className="ri-dumbbell-fill text-white text-xl"></i>
           </div>
-          <h1 className="text-xl font-bold text-gray-900">WOD Connect</h1>
+          <h1 className="text-xl font-bold text-gray-900">SmartWod</h1>
         </div>
         
         <nav className="space-y-2">
