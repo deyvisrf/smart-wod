@@ -6,23 +6,26 @@ import Header from '../../components/Header';
 import WorkoutPost from '../../components/WorkoutPost';
 
 export default function HomePage() {
-  // Carrega posts que o usuário compartilhou via modal (localStorage)
-  const getShared = () => {
-    try {
-      return JSON.parse(typeof window !== 'undefined' ? localStorage.getItem('my_feed_posts') || '[]' : '[]');
-    } catch {
-      return [] as any[];
-    }
-  };
-
-  const [sharedPosts, setSharedPosts] = React.useState<any[]>(getShared());
+  const [sharedPosts, setSharedPosts] = React.useState<any[]>([]);
   const [expandedIds, setExpandedIds] = React.useState<Record<string, boolean>>({});
   const [likedPosts, setLikedPosts] = React.useState<Record<string, boolean>>({});
   const [showComments, setShowComments] = React.useState<Record<string, boolean>>({});
   const [commentTexts, setCommentTexts] = React.useState<Record<string, string>>({});
   const [postComments, setPostComments] = React.useState<Record<string, Array<{id: string, text: string, author: string, time: string}>>>({});
 
+  // Carrega posts que o usuário compartilhou via modal (localStorage)
+  const getShared = () => {
+    try {
+      return JSON.parse(localStorage.getItem('my_feed_posts') || '[]');
+    } catch {
+      return [];
+    }
+  };
+
   React.useEffect(() => {
+    // Carrega dados do localStorage apenas no cliente
+    setSharedPosts(getShared());
+    
     const handler = () => setSharedPosts(getShared());
     window.addEventListener('wod:shared', handler);
     return () => window.removeEventListener('wod:shared', handler);
@@ -217,7 +220,7 @@ export default function HomePage() {
                       <p className="text-sm text-gray-600 mt-3">{p.notes}</p>
                     )}
 
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-gray-100 gap-4">
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100 gap-4">
                       <div className="flex items-center gap-4 lg:gap-6">
                         <button 
                           onClick={handleLike}
@@ -243,7 +246,7 @@ export default function HomePage() {
                       
                       <button
                         onClick={() => setExpandedIds((prev) => ({ ...prev, [key]: !prev[key] }))}
-                        className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 text-white text-sm shadow-md hover:from-purple-600 hover:to-pink-600"
+                        className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-3 py-1.5 text-white text-xs sm:text-sm shadow-md hover:from-purple-600 hover:to-pink-600 flex-shrink-0"
                       >
                         {isExpanded ? 'Ver menos' : 'Ver mais'}
                       </button>

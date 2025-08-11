@@ -207,6 +207,36 @@ export default function CreateWorkoutModal({ open, onClose }: Props) {
                   <p className="text-xs text-gray-400 mb-3">Fonte: {wod.source} {wod.modelUsed ? `(modelo: ${wod.modelUsed})` : ''}</p>
                 )}
                 <div className="mb-4 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      try {
+                        const savedWods = JSON.parse(localStorage.getItem('saved_wods') || '[]');
+                        const newWod = {
+                          id: Date.now().toString(),
+                          title: wod.title,
+                          level: wod.level,
+                          warmup: wod.warmup,
+                          main: wod.main,
+                          cooldown: wod.cooldown,
+                          notes: wod.notes,
+                          equipment: equipment,
+                          style: workoutFormat,
+                          preset: preset,
+                          loadRecommendations: wod.loadRecommendations,
+                          createdAt: new Date().toISOString(),
+                        };
+                        savedWods.unshift(newWod);
+                        localStorage.setItem('saved_wods', JSON.stringify(savedWods));
+                        window.dispatchEvent(new CustomEvent('toast:show', { detail: { message: 'WOD salvo na sua biblioteca!', variant: 'success' } }));
+                      } catch {
+                        window.dispatchEvent(new CustomEvent('toast:show', { detail: { message: 'Não foi possível salvar o WOD.', variant: 'error' } }));
+                      }
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 px-4 py-2 text-white text-sm shadow-md hover:from-blue-600 hover:to-cyan-600"
+                  >
+                    <i className="ri-bookmark-line" /> Salvar WOD
+                  </button>
                   <a
                     href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`${wod.title} - ${wod.main?.title ?? ''}`)}`}
                     target="_blank"

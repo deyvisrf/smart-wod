@@ -21,6 +21,17 @@ export default function Header() {
     } catch {
       setIsLoggedIn(false);
     }
+
+    // Event listener para abrir modal de criação
+    const handleOpenCreateModal = () => {
+      setOpenCreate(true);
+    };
+
+    window.addEventListener('open-create-modal', handleOpenCreateModal);
+    
+    return () => {
+      window.removeEventListener('open-create-modal', handleOpenCreateModal);
+    };
   }, []);
 
   // Fecha o menu de perfil ao clicar fora
