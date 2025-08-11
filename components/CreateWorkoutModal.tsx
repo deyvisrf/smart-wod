@@ -220,9 +220,9 @@ export default function CreateWorkoutModal({ open, onClose }: Props) {
                           main: wod.main,
                           cooldown: wod.cooldown,
                           notes: wod.notes,
-                          equipment: equipment,
-                          style: workoutFormat,
-                          preset: preset,
+                          equipment: form.equipment,
+                          style: form.style,
+                          preset: form.preset,
                           loadRecommendations: wod.loadRecommendations,
                           createdAt: new Date().toISOString(),
                         };
