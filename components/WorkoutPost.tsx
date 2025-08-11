@@ -24,7 +24,7 @@ export default function WorkoutPost({
   warmup, 
   mainWorkout, 
   avatar,
-  level 
+  level
 }: WorkoutPostProps) {
   const [liked, setLiked] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -118,10 +118,7 @@ export default function WorkoutPost({
           </button>
         </div>
         
-        <button className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 lg:px-6 py-2 rounded-full font-medium hover:from-purple-600 hover:to-pink-600 transition-all cursor-pointer whitespace-nowrap shadow-md text-sm lg:text-base">
-          <span className="hidden sm:inline">Tentar Este WOD</span>
-          <span className="sm:hidden">Tentar WOD</span>
-        </button>
+        {/* Botão "Tentar Este WOD" removido */}
       </div>
 
       {showComments && (

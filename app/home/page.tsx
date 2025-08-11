@@ -16,6 +16,11 @@ export default function HomePage() {
   };
 
   const [sharedPosts, setSharedPosts] = React.useState<any[]>(getShared());
+  const [expandedIds, setExpandedIds] = React.useState<Record<string, boolean>>({});
+  const [likedPosts, setLikedPosts] = React.useState<Record<string, boolean>>({});
+  const [showComments, setShowComments] = React.useState<Record<string, boolean>>({});
+  const [commentTexts, setCommentTexts] = React.useState<Record<string, string>>({});
+  const [postComments, setPostComments] = React.useState<Record<string, Array<{id: string, text: string, author: string, time: string}>>>({});
 
   React.useEffect(() => {
     const handler = () => setSharedPosts(getShared());
@@ -116,7 +121,44 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-6">
             <div className="xl:col-span-2 order-2 xl:order-1">
-              {sharedPosts.map((p, idx) => (
+              {sharedPosts.map((p, idx) => {
+                const key = String(p.id ?? idx);
+                const isExpanded = !!expandedIds[key];
+                const isLiked = !!likedPosts[key];
+                const showPostComments = !!showComments[key];
+                const commentText = commentTexts[key] || '';
+                const comments = postComments[key] || [];
+                const warmupItems = Array.isArray(p?.warmup?.items) ? p.warmup.items : [];
+                const mainItems = Array.isArray(p?.main?.items) ? p.main.items : [];
+                const cooldownItems = Array.isArray(p?.cooldown?.items) ? p.cooldown.items : [];
+
+                const warmupToShow = isExpanded ? warmupItems : warmupItems.slice(0, 2);
+                const mainToShow = isExpanded ? mainItems : mainItems.slice(0, 3);
+
+                const handleLike = () => {
+                  setLikedPosts(prev => ({ ...prev, [key]: !prev[key] }));
+                };
+
+                const handleComment = () => {
+                  setShowComments(prev => ({ ...prev, [key]: !prev[key] }));
+                };
+
+                const handleAddComment = () => {
+                  if (!commentText.trim()) return;
+                  const newComment = {
+                    id: Date.now().toString(),
+                    text: commentText,
+                    author: 'Você',
+                    time: 'agora'
+                  };
+                  setPostComments(prev => ({
+                    ...prev,
+                    [key]: [...(prev[key] || []), newComment]
+                  }));
+                  setCommentTexts(prev => ({ ...prev, [key]: '' }));
+                };
+
+                return (
                 <div key={`shared-${p.id ?? idx}`} className="mb-4">
                   <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6">
                     <div className="flex items-center justify-between mb-4">
@@ -139,7 +181,7 @@ export default function HomePage() {
                           {p.warmup.title}
                         </h4>
                         <ul className="list-disc pl-6 text-gray-700 space-y-1">
-                          {p.warmup.items?.map((it: string, i: number) => (
+                          {warmupToShow.map((it: string, i: number) => (
                             <li key={i}>{it}</li>
                           ))}
                         </ul>
@@ -152,15 +194,101 @@ export default function HomePage() {
                           {p.main.title}
                         </h4>
                         <ul className="list-disc pl-6 text-gray-700 space-y-1">
-                          {p.main.items?.map((it: string, i: number) => (
+                          {mainToShow.map((it: string, i: number) => (
                             <li key={i}>{it}</li>
                           ))}
                         </ul>
                       </div>
                     )}
+                    {isExpanded && p.cooldown && (
+                      <div className="mt-3">
+                        <h4 className="text-purple-600 font-semibold mb-2 flex items-center gap-2 text-sm lg:text-base">
+                          <i className="ri-drop-line"></i>
+                          {p.cooldown.title}
+                        </h4>
+                        <ul className="list-disc pl-6 text-gray-700 space-y-1">
+                          {cooldownItems.map((it: string, i: number) => (
+                            <li key={i}>{it}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {isExpanded && p.notes && (
+                      <p className="text-sm text-gray-600 mt-3">{p.notes}</p>
+                    )}
+
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-gray-100 gap-4">
+                      <div className="flex items-center gap-4 lg:gap-6">
+                        <button 
+                          onClick={handleLike}
+                          className={`flex items-center gap-2 cursor-pointer whitespace-nowrap transition-colors ${
+                            isLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
+                          }`}
+                        >
+                          <i className={`${isLiked ? 'ri-heart-fill' : 'ri-heart-line'} text-lg lg:text-xl`}></i>
+                          <span className="font-medium text-sm lg:text-base">{isLiked ? '1' : '0'}</span>
+                        </button>
+                        <button 
+                          onClick={handleComment}
+                          className="flex items-center gap-2 text-gray-500 hover:text-purple-500 cursor-pointer whitespace-nowrap transition-colors"
+                        >
+                          <i className="ri-chat-3-line text-lg lg:text-xl"></i>
+                          <span className="font-medium text-sm lg:text-base">{comments.length}</span>
+                        </button>
+                        <button className="flex items-center gap-2 text-gray-500 hover:text-green-500 cursor-pointer whitespace-nowrap transition-colors">
+                          <i className="ri-share-line text-lg lg:text-xl"></i>
+                          <span className="font-medium text-sm lg:text-base hidden sm:inline">Compartilhar</span>
+                        </button>
+                      </div>
+                      
+                      <button
+                        onClick={() => setExpandedIds((prev) => ({ ...prev, [key]: !prev[key] }))}
+                        className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 text-white text-sm shadow-md hover:from-purple-600 hover:to-pink-600"
+                      >
+                        {isExpanded ? 'Ver menos' : 'Ver mais'}
+                      </button>
+                    </div>
+
+                    {showPostComments && (
+                      <div className="mt-4 pt-4 border-t border-gray-100">
+                        <div className="space-y-3">
+                          {comments.map((comment) => (
+                            <div key={comment.id} className="flex items-start gap-3">
+                              <div className="w-6 h-6 lg:w-8 lg:h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                                <span className="text-white text-xs lg:text-sm font-bold">V</span>
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-sm"><span className="font-semibold">{comment.author}</span> {comment.text}</p>
+                                <p className="text-xs text-gray-500 mt-1">{comment.time}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        <div className="flex items-center gap-3 mt-4">
+                          <div className="w-6 h-6 lg:w-8 lg:h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs lg:text-sm font-bold">V</span>
+                          </div>
+                          <input 
+                            type="text" 
+                            placeholder="Escreva um comentário..." 
+                            value={commentText}
+                            onChange={(e) => setCommentTexts(prev => ({ ...prev, [key]: e.target.value }))}
+                            onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
+                            className="flex-1 px-3 lg:px-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm bg-gray-50"
+                          />
+                          <button 
+                            onClick={handleAddComment}
+                            className="text-purple-500 hover:text-purple-600 cursor-pointer p-2 hover:bg-purple-50 rounded-full transition-colors"
+                          >
+                            <i className="ri-send-plane-line text-lg lg:text-xl"></i>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
-              ))}
+              );})}
 
               {workoutPosts.map((post, index) => (
                 <WorkoutPost key={index} {...post} />
