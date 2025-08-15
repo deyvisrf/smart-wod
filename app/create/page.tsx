@@ -1,10 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { GeneratedWod } from './actions';
 import { generateWodAction } from './actions';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../../contexts/AuthContext';
+import { WodService, type WodData } from '../../lib/wods';
 
 export default function CreateWorkoutPage() {
+  const router = useRouter();
+  const { user, loading } = useAuth();
+
+  // Redirect para login se não autenticado
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/auth/login');
+    }
+  }, [user, loading, router]);
   const equipmentOptions = [
     'Livre',
     'Kettlebell',
@@ -38,6 +50,8 @@ export default function CreateWorkoutPage() {
     'surprise' | 'quickMinimal' | 'endurance' | 'beginners' | null
   >(null);
   const [wod, setWod] = useState<GeneratedWod | null>(null);
+  const [showForm, setShowForm] = useState(true);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
   const runQuick = async (
     type: 'surprise' | 'quickMinimal' | 'endurance' | 'beginners',
@@ -96,6 +110,7 @@ export default function CreateWorkoutPage() {
       }
       const result = await generateWodAction(input);
       setWod(result);
+      setSaveStatus('idle'); // Reset save status when new WOD is generated
     } finally {
       setStatus('idle');
       setQuickType(null);
@@ -118,8 +133,45 @@ export default function CreateWorkoutPage() {
         prompt: form.prompt,
       });
       setWod(result);
+      setSaveStatus('idle'); // Reset save status when new WOD is generated
     } finally {
       setStatus('idle');
+    }
+  };
+
+  // Função para salvar WOD no banco
+  const handleSaveWod = async () => {
+    if (!wod || !user) return;
+
+    setSaveStatus('saving');
+    try {
+      // Converter GeneratedWod para WodData
+      const wodData: WodData = {
+        title: wod.title,
+        level: wod.level,
+        duration_minutes: wod.durationMinutes,
+        warmup: wod.warmup,
+        main: wod.main,
+        cooldown: wod.cooldown,
+        notes: wod.notes,
+        equipment: form.equipment,
+        style: form.style,
+        preset: form.preset,
+        load_recommendations: wod.loadRecommendations
+      };
+
+      const saved = await WodService.createWod(wodData, user.id);
+      if (saved) {
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 3000); // Reset after 3 seconds
+      } else {
+        setSaveStatus('error');
+        setTimeout(() => setSaveStatus('idle'), 3000);
+      }
+    } catch (error) {
+      console.error('Error saving WOD:', error);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000);
     }
   };
 
@@ -196,16 +248,173 @@ export default function CreateWorkoutPage() {
             Gerando seu WOD…
           </div>
         )}
-
-        {/* Formulário removido: utilize os atalhos acima para gerar WODs rapidamente */}
+        {/* Form completo */}
+        <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 lg:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-gray-900">Parâmetros</h2>
+            <button
+              type="button"
+              onClick={() => setShowForm((v) => !v)}
+              className="text-purple-600 hover:text-purple-700 text-sm"
+            >
+              {showForm ? 'Ocultar' : 'Mostrar'}
+            </button>
+          </div>
+          {showForm && (
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nível</label>
+                <select
+                  value={form.level}
+                  onChange={(e) => setForm({ ...form, level: e.target.value })}
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2"
+                >
+                  <option>Iniciante</option>
+                  <option>Intermediário</option>
+                  <option>Avançado</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Objetivo</label>
+                <input
+                  value={form.goal}
+                  onChange={(e) => setForm({ ...form, goal: e.target.value })}
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Equipamentos</label>
+                <div className="flex flex-wrap gap-2">
+                  {equipmentOptions.map((eq) => {
+                    const selected = form.equipment.includes(eq);
+                    return (
+                      <button
+                        type="button"
+                        key={eq}
+                        onClick={() => {
+                          setForm((prev) => ({
+                            ...prev,
+                            equipment: selected
+                              ? prev.equipment.filter((e) => e !== eq)
+                              : [...prev.equipment, eq],
+                          }));
+                        }}
+                        className={`px-3 py-1.5 rounded-full text-sm border ${selected ? 'bg-purple-600 text-white border-purple-600' : 'bg-gray-50 text-gray-700 border-gray-200'}`}
+                      >
+                        {eq}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Duração (min)</label>
+                <input
+                  type="number"
+                  min={5}
+                  max={120}
+                  value={form.duration}
+                  onChange={(e) => setForm({ ...form, duration: Number(e.target.value) })}
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Estilo</label>
+                <select
+                  value={form.style}
+                  onChange={(e) => setForm({ ...form, style: e.target.value as any })}
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2"
+                >
+                  <option value="AMRAP">AMRAP</option>
+                  <option value="EMOM">EMOM</option>
+                  <option value="For Time">For Time</option>
+                  <option value="Chipper">Chipper</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Preset</label>
+                <select
+                  value={form.preset}
+                  onChange={(e) => setForm({ ...form, preset: e.target.value as any })}
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2"
+                >
+                  <option value="RX">RX</option>
+                  <option value="Scaled">Scaled</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  id="includeLoads"
+                  type="checkbox"
+                  checked={form.includeLoads}
+                  onChange={(e) => setForm({ ...form, includeLoads: e.target.checked })}
+                />
+                <label htmlFor="includeLoads" className="text-sm text-gray-700">Incluir recomendações de carga</label>
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Prompt livre (opcional)</label>
+                <textarea
+                  value={form.prompt}
+                  onChange={(e) => setForm({ ...form, prompt: e.target.value })}
+                  rows={4}
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2"
+                />
+              </div>
+              <div className="sm:col-span-2 flex gap-3">
+                <button
+                  type="submit"
+                  disabled={status !== 'idle'}
+                  className="rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white px-5 py-2 font-semibold shadow-md hover:from-purple-600 hover:to-pink-600 disabled:opacity-60"
+                >
+                  {status === 'loading' ? 'Gerando…' : 'Gerar WOD'}
+                </button>
+              </div>
+            </form>
+          )}
+        </section>
 
         {wod && (
           <section className="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 lg:p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900">{wod.title}</h2>
-              {wod.durationMinutes ? (
-                <span className="text-sm text-gray-600">{wod.durationMinutes} min</span>
-              ) : null}
+              <div className="flex items-center gap-3">
+                {wod.durationMinutes ? (
+                  <span className="text-sm text-gray-600">{wod.durationMinutes} min</span>
+                ) : null}
+                <button
+                  onClick={handleSaveWod}
+                  disabled={saveStatus === 'saving' || !user}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    saveStatus === 'saved' 
+                      ? 'bg-green-100 text-green-700 border border-green-200' 
+                      : saveStatus === 'error'
+                      ? 'bg-red-100 text-red-700 border border-red-200'
+                      : 'bg-purple-100 text-purple-700 border border-purple-200 hover:bg-purple-200'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {saveStatus === 'saving' ? (
+                    <span className="flex items-center gap-2">
+                      <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-purple-600 border-r-transparent" />
+                      Salvando...
+                    </span>
+                  ) : saveStatus === 'saved' ? (
+                    <span className="flex items-center gap-2">
+                      <i className="ri-check-line"></i>
+                      Salvo!
+                    </span>
+                  ) : saveStatus === 'error' ? (
+                    <span className="flex items-center gap-2">
+                      <i className="ri-close-line"></i>
+                      Erro
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <i className="ri-save-line"></i>
+                      Salvar WOD
+                    </span>
+                  )}
+                </button>
+              </div>
             </div>
             <p className="text-sm text-gray-500 mb-1">Nível: {wod.level}</p>
             {(wod.modelUsed || wod.source) && (

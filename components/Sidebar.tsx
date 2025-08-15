@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 export default function Sidebar() {
   const menuItems = [
-    { icon: 'ri-home-fill', label: 'Feed', href: '/', active: true },
+    { icon: 'ri-home-fill', label: 'Feed', href: '/home', active: true },
     { icon: 'ri-dumbbell-fill', label: 'Meus WODs', href: '/wods' },
     { icon: 'ri-group-line', label: 'Grupos', href: '/groups' },
     { icon: 'ri-trophy-line', label: 'Desafios', href: '/challenges' },
@@ -43,31 +43,7 @@ export default function Sidebar() {
           ))}
         </nav>
 
-        <div className="mt-8 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">D</span>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900 text-sm">Deyvis Ferreira</p>
-              <p className="text-gray-500 text-xs">Fitness Enthusiast</p>
-            </div>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <div className="text-center">
-              <p className="font-bold text-purple-600">127</p>
-              <p className="text-gray-500 text-xs">Seguidores</p>
-            </div>
-            <div className="text-center">
-              <p className="font-bold text-purple-600">89</p>
-              <p className="text-gray-500 text-xs">Seguindo</p>
-            </div>
-            <div className="text-center">
-              <p className="font-bold text-purple-600">45</p>
-              <p className="text-gray-500 text-xs">WODs</p>
-            </div>
-          </div>
-        </div>
+
       </div>
     </div>
   );

@@ -1,57 +1,64 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
+import Link from 'next/link';
+import { useAuth } from '../../contexts/AuthContext';
+import { WodService, type WodData, migrateLocalStorageWods } from '../../lib/wods';
 
-interface SavedWod {
-  id: string;
-  title: string;
-  warmup?: {
-    title: string;
-    items: string[];
-  };
-  main?: {
-    title: string;
-    items: string[];
-  };
-  cooldown?: {
-    title: string;
-    items: string[];
-  };
-  notes?: string;
-  createdAt: string;
-  equipment?: string[];
-  style?: string;
-  preset?: string;
-  loadRecommendations?: string | object;
-}
+// Usando o tipo WodData do serviço
 
 export default function WodsPage() {
-  const [savedWods, setSavedWods] = useState<SavedWod[]>([]);
+  const router = useRouter();
+  const { user, loading } = useAuth();
+  const [savedWods, setSavedWods] = useState<WodData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [editingWod, setEditingWod] = useState<SavedWod | null>(null);
+  const [editingWod, setEditingWod] = useState<WodData | null>(null);
   const [expandedWods, setExpandedWods] = useState<Record<string, boolean>>({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [migrationStatus, setMigrationStatus] = useState<string | null>(null);
 
-  // Carrega WODs salvos do localStorage
-  const loadSavedWods = () => {
+  // Redirect para login se não autenticado
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/auth/login');
+    }
+  }, [user, loading, router]);
+
+  // Carrega WODs do banco de dados
+  const loadWods = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
     try {
-      const saved = localStorage.getItem('saved_wods');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
+      // Primeiro, tentar migrar dados do localStorage se existirem
+      const hasLocalWods = localStorage.getItem('saved_wods');
+      if (hasLocalWods) {
+        setMigrationStatus('Migrando WODs do localStorage...');
+        const migration = await migrateLocalStorageWods(user.id);
+        if (migration.migrated > 0) {
+          setMigrationStatus(`${migration.migrated} WODs migrados com sucesso!`);
+          setTimeout(() => setMigrationStatus(null), 3000);
+        }
+      }
+
+      // Carregar WODs do banco
+      const wods = await WodService.getUserWods(user.id);
+      setSavedWods(wods);
+    } catch (error) {
+      console.error('Error loading WODs:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Salva WODs no localStorage
-  const saveWods = (wods: SavedWod[]) => {
-    localStorage.setItem('saved_wods', JSON.stringify(wods));
-    setSavedWods(wods);
-  };
-
   useEffect(() => {
-    setSavedWods(loadSavedWods());
-  }, []);
+    if (user) {
+      loadWods();
+    }
+  }, [user]);
 
   // Filtra WODs por termo de busca
   const filteredWods = savedWods.filter(wod =>
@@ -61,27 +68,35 @@ export default function WodsPage() {
   );
 
   // Exclui um WOD
-  const handleDelete = (id: string) => {
-    if (confirm('Tem certeza que deseja excluir este WOD?')) {
-      const updated = savedWods.filter(wod => wod.id !== id);
-      saveWods(updated);
+  const handleDelete = async (id: string | undefined) => {
+    if (!user || !id || !confirm('Tem certeza que deseja excluir este WOD?')) return;
+    
+    const success = await WodService.deleteWod(id, user.id);
+    if (success) {
+      setSavedWods(prev => prev.filter(wod => wod.id !== id));
+    } else {
+      alert('Erro ao excluir WOD. Tente novamente.');
     }
   };
 
   // Inicia edição
-  const handleEdit = (wod: SavedWod) => {
+  const handleEdit = (wod: WodData) => {
     setEditingWod({ ...wod });
   };
 
   // Salva edição
-  const handleSaveEdit = () => {
-    if (!editingWod) return;
+  const handleSaveEdit = async () => {
+    if (!editingWod || !user) return;
     
-    const updated = savedWods.map(wod => 
-      wod.id === editingWod.id ? editingWod : wod
-    );
-    saveWods(updated);
-    setEditingWod(null);
+    const updated = await WodService.updateWod(editingWod.id!, editingWod, user.id);
+    if (updated) {
+      setSavedWods(prev => prev.map(wod => 
+        wod.id === editingWod.id ? updated : wod
+      ));
+      setEditingWod(null);
+    } else {
+      alert('Erro ao salvar alterações. Tente novamente.');
+    }
   };
 
   // Cancela edição
@@ -90,9 +105,31 @@ export default function WodsPage() {
   };
 
   // Toggle expandir WOD
-  const toggleExpand = (id: string) => {
+  const toggleExpand = (id: string | undefined) => {
+    if (!id) return;
     setExpandedWods(prev => ({ ...prev, [id]: !prev[id] }));
   };
+
+  // Mostrar loading enquanto carrega
+  if (loading || isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
+        <Sidebar />
+        <Header />
+        <main className="lg:ml-72 pt-20 lg:pt-24 pb-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+              <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-gray-600">Carregando WODs...</p>
+              {migrationStatus && (
+                <p className="text-purple-600 text-sm mt-2">{migrationStatus}</p>
+              )}
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
@@ -161,7 +198,7 @@ export default function WodsPage() {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
               {filteredWods.map((wod) => {
-                const isExpanded = expandedWods[wod.id];
+                const isExpanded = wod.id ? expandedWods[wod.id] : false;
                 const isEditing = editingWod?.id === wod.id;
                 
                 return (
@@ -169,7 +206,7 @@ export default function WodsPage() {
                     {/* Header do card */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
-                        {isEditing ? (
+                        {isEditing && editingWod ? (
                           <input
                             type="text"
                             value={editingWod.title}
@@ -181,7 +218,7 @@ export default function WodsPage() {
                         )}
                         <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
                           <i className="ri-calendar-line"></i>
-                          <span>{new Date(wod.createdAt).toLocaleDateString('pt-BR')}</span>
+                          <span>{wod.created_at ? new Date(wod.created_at).toLocaleDateString('pt-BR') : 'Data não disponível'}</span>
                         </div>
                       </div>
                       
@@ -302,19 +339,19 @@ export default function WodsPage() {
                       )}
 
                       {/* Recomendações de carga (só quando expandido) */}
-                      {isExpanded && wod.loadRecommendations && (
+                      {isExpanded && wod.load_recommendations && (
                         <div>
                           <h4 className="text-purple-600 font-semibold mb-2 flex items-center gap-2 text-sm">
                             <i className="ri-scales-3-line"></i>
                             Recomendações de Carga
                           </h4>
                           <div className="text-gray-600 text-sm">
-                            {typeof wod.loadRecommendations === 'string' ? (
-                              <p>{wod.loadRecommendations}</p>
+                            {typeof wod.load_recommendations === 'string' ? (
+                              <p>{wod.load_recommendations}</p>
                             ) : (
                               <div className="space-y-1">
-                                {Object.entries(wod.loadRecommendations).map(([key, value]) => (
-                                  <p key={key}><span className="font-medium">{key}:</span> {value}</p>
+                                {Object.entries(wod.load_recommendations).map(([key, value]) => (
+                                  <p key={key}><span className="font-medium">{key}:</span> {String(value)}</p>
                                 ))}
                               </div>
                             )}
@@ -333,6 +370,12 @@ export default function WodsPage() {
                           <i className="ri-share-line"></i>
                           <span className="hidden sm:inline">Compartilhar</span>
                         </button>
+                        {wod.id && (
+                          <Link href={`/wods/${wod.id}`} className="flex items-center gap-2 text-purple-600 hover:text-purple-700 text-sm">
+                            <i className="ri-arrow-right-line"></i>
+                            Ver detalhes
+                          </Link>
+                        )}
                       </div>
                       
                       <button

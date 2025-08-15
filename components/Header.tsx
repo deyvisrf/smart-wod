@@ -11,6 +11,7 @@ export default function Header() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const profileRef = useRef<HTMLDivElement | null>(null);
 
@@ -18,8 +19,11 @@ export default function Header() {
     try {
       const v = typeof window !== 'undefined' ? localStorage.getItem('isLoggedIn') : null;
       setIsLoggedIn(v === '1');
+      const p = typeof window !== 'undefined' ? localStorage.getItem('isPremium') : null;
+      setIsPremium(p === '1');
     } catch {
       setIsLoggedIn(false);
+      setIsPremium(false);
     }
 
     // Event listener para abrir modal de criação
@@ -164,6 +168,19 @@ export default function Header() {
                     <a href="/settings" className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-gray-50" role="menuitem">
                       <i className="ri-settings-3-line" /> Configurações
                     </a>
+                    <button
+                      onClick={() => {
+                        try {
+                          const next = !isPremium;
+                          localStorage.setItem('isPremium', next ? '1' : '0');
+                          setIsPremium(next);
+                        } catch {}
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-gray-700 hover:bg-gray-50"
+                      role="menuitem"
+                    >
+                      <i className="ri-vip-crown-line" /> {isPremium ? 'Desativar Premium' : 'Ativar Premium'}
+                    </button>
                     <div className="my-1 h-px bg-gray-100" />
                     <button
                       onClick={() => {
@@ -205,7 +222,7 @@ export default function Header() {
               </div>
               
               <nav className="space-y-2">
-                <a href="/" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md">
+                <a href="/home" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md">
                   <i className="ri-home-fill text-lg"></i>
                   <span className="font-medium">Feed</span>
                 </a>
@@ -238,31 +255,7 @@ export default function Header() {
                 )}
               </nav>
 
-              <div className="mt-8 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">D</span>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm">Deyvis Ferreira</p>
-                    <p className="text-gray-500 text-xs">Fitness Enthusiast</p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <div className="text-center">
-                    <p className="font-bold text-purple-600">127</p>
-                    <p className="text-gray-500 text-xs">Seguidores</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-bold text-purple-600">89</p>
-                    <p className="text-gray-500 text-xs">Seguindo</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-bold text-purple-600">45</p>
-                    <p className="text-gray-500 text-xs">WODs</p>
-                  </div>
-                </div>
-              </div>
+
             </div>
           </div>
         </div>
