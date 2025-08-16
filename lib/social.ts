@@ -397,7 +397,14 @@ export class FeedService {
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
 
-      if (error) throw error
+      if (error) {
+        // Se der erro na tabela wods, retornar array vazio
+        if (error.code === '42P01' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
+          console.warn('WODs table not found. This is normal for new applications.')
+          return []
+        }
+        throw error
+      }
 
       // Processar dados para incluir informações sociais
       return data.map((wod: any) => ({
@@ -410,8 +417,12 @@ export class FeedService {
         is_liked: wod.likes?.some((like: any) => like.user_id === userId) || false,
         user: wod.user as any
       }))
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching user feed:', error)
+      // Se a tabela não existe, retornar array vazio com mensagem
+      if (error?.code === '42P01' || error?.message?.includes('relation') || error?.message?.includes('does not exist')) {
+        console.warn('Tables not found. Please run the SQL migrations in Supabase.')
+      }
       return []
     }
   }
@@ -430,7 +441,14 @@ export class FeedService {
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
 
-      if (error) throw error
+      if (error) {
+        // Se der erro na tabela wods, retornar array vazio
+        if (error.code === '42P01' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
+          console.warn('WODs table not found. This is normal for new applications.')
+          return []
+        }
+        throw error
+      }
 
       return data.map((wod: any) => ({
         id: wod.id,
@@ -442,8 +460,12 @@ export class FeedService {
         is_liked: false, // Não temos contexto do usuário aqui
         user: wod.user as any
       }))
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching public feed:', error)
+      // Se der erro na tabela wods, retornar array vazio
+      if (error?.code === '42P01' || error?.message?.includes('relation') || error?.message?.includes('does not exist')) {
+        console.warn('Tables not found. Please run the SQL migrations in Supabase.')
+      }
       return []
     }
   }

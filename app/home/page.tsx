@@ -148,10 +148,52 @@ export default function HomePage() {
               {feedPosts.length === 0 ? (
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
                   <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i className="ri-team-line text-3xl text-purple-500"></i>
+                    <i className="ri-dumbbell-line text-3xl text-purple-500"></i>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Seu feed está vazio</h3>
-                  <p className="text-gray-600 mb-6">Siga outros usuários ou crie seus primeiros WODs para ver posts aqui!</p>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Bem-vindo ao SmartWod! 🎉</h3>
+                  <p className="text-gray-600 mb-6">
+                    Sua aplicação está funcionando perfeitamente! Como é nova, ainda não há WODs publicados.
+                  </p>
+                  
+                  {/* Botões de ação */}
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <button
+                      onClick={() => router.push('/create')}
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg hover:shadow-xl"
+                    >
+                      <i className="ri-add-line mr-2"></i>
+                      Criar Primeiro WOD
+                    </button>
+                    
+                    <button
+                      onClick={() => router.push('/wods')}
+                      className="bg-white border-2 border-purple-500 text-purple-600 px-6 py-3 rounded-xl font-semibold hover:bg-purple-50 transition-all"
+                    >
+                      <i className="ri-search-line mr-2"></i>
+                      Explorar WODs
+                    </button>
+                  </div>
+                  
+                  {/* Informações adicionais */}
+                  <div className="mt-6 pt-6 border-t border-gray-100">
+                    <p className="text-sm text-gray-500 mb-3">
+                      💡 Dicas para começar:
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-gray-600">
+                      <div className="flex items-center gap-2">
+                        <i className="ri-check-line text-green-500"></i>
+                        <span>Crie seu primeiro treino</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <i className="ri-check-line text-green-500"></i>
+                        <span>Siga outros usuários</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <i className="ri-check-line text-green-500"></i>
+                        <span>Compartilhe seus WODs</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 feedPosts.map((post) => {

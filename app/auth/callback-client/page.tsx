@@ -13,7 +13,7 @@ export default function CallbackClient() {
       
       if (!supabase) {
         console.error('Supabase client not available');
-        router.push('/auth/auth-code-error');
+        window.location.href = '/auth/login';
         return;
       }
 
@@ -40,41 +40,37 @@ export default function CallbackClient() {
 
           console.log('Session set successfully:', data);
           
-          // Aguardar um momento para garantir que a sessão foi salva
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          // Usar replace em vez de push para evitar problemas de histórico
-          window.location.href = '/home';
+          // Redirecionar imediatamente para home
+          window.location.replace('/home');
+          return;
         } catch (error) {
           console.error('Error setting session:', error);
-          router.push('/auth/auth-code-error');
+          window.location.href = '/auth/login';
+          return;
         }
-      } else {
-        // Verificar se já tem sessão (pode ter vindo de outro fluxo)
+      }
+
+      // Se não tem tokens, verificar se já tem sessão
+      try {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session) {
           console.log('Session already exists, redirecting to home');
-          window.location.href = '/home';
+          window.location.replace('/home');
         } else {
-          console.error('No tokens found in URL');
-          router.push('/auth/auth-code-error');
+          console.log('No tokens or session found, redirecting to login');
+          window.location.href = '/auth/login';
         }
+      } catch (error) {
+        console.error('Error checking session:', error);
+        window.location.href = '/auth/login';
       }
     };
 
+    // Executar imediatamente
     handleCallback();
   }, [router]);
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-purple-50">
-      <div className="text-center">
-        <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
-          <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-        </div>
-        <p className="text-gray-600">Processando autenticação...</p>
-      </div>
-    </div>
-  );
+  // Não renderizar nada para evitar "piscar" a tela
+  return null;
 }
-

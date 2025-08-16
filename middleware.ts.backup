@@ -13,9 +13,6 @@ export async function middleware(req: NextRequest) {
     '/auth/auth-code-error',
     '/login',
     '/setup',
-    '/test-session',
-    '/test-auth',
-    '/test-feed',
     '/api'
   ]
   
@@ -30,33 +27,8 @@ export async function middleware(req: NextRequest) {
   }
   
   // Para rotas protegidas, verificar cookies do Supabase
-  // Procurar por qualquer cookie do Supabase que contenha token
-  const cookies = req.cookies.getAll()
-  
-  // Verificar múltiplos padrões de cookies do Supabase
-  const supabaseCookie = cookies.find(cookie => {
-    const name = cookie.name
-    return (
-      // Padrão padrão: sb-{project-ref}-auth-token
-      (name.includes('sb-') && name.includes('auth-token')) ||
-      // Padrão alternativo: sb-{project-ref}-auth-token-{hash}
-      (name.includes('sb-') && name.includes('auth-token-')) ||
-      // Verificar se contém token de acesso
-      (name.includes('sb-') && cookie.value && cookie.value.length > 10)
-    )
-  })
-  
-  const hasSession = !!supabaseCookie
-  
-  // Log para debug (remover em produção)
-  if (pathname === '/home' || pathname === '/') {
-    console.log('[Middleware] Check:', { 
-      path: pathname, 
-      hasSession,
-      supabaseCookie: supabaseCookie ? { name: supabaseCookie.name, hasValue: !!supabaseCookie.value } : null,
-      allCookies: cookies.map(c => c.name)
-    })
-  }
+  const supabaseAccessToken = req.cookies.get('sb-jjsmoytzjhzdjxinhgen-auth-token')
+  const hasSession = !!supabaseAccessToken
   
   // Rotas que requerem autenticação
   const protectedRoutes = ['/home', '/wods', '/create', '/profile', '/settings', '/messages', '/groups', '/challenges']
@@ -66,7 +38,6 @@ export async function middleware(req: NextRequest) {
   
   // Se é rota protegida e não tem sessão, redirecionar para login
   if (isProtectedRoute && !hasSession) {
-    console.log('[Middleware] No session, redirecting to login')
     const url = req.nextUrl.clone()
     url.pathname = '/auth/login'
     return NextResponse.redirect(url)

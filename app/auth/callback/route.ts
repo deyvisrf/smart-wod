@@ -7,19 +7,13 @@ export async function GET(request: NextRequest) {
   const code = requestUrl.searchParams.get('code')
   const next = requestUrl.searchParams.get('next') ?? '/home'
 
-  console.log('Auth callback received:', { 
-    code: !!code, 
-    next,
-    url: request.url 
-  })
-
   if (code) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
     if (!supabaseUrl || !supabaseAnonKey) {
       console.error('Missing Supabase environment variables')
-      return NextResponse.redirect(`${requestUrl.origin}/auth/auth-code-error`)
+      return NextResponse.redirect(`${requestUrl.origin}/auth/login`)
     }
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey)
@@ -28,20 +22,19 @@ export async function GET(request: NextRequest) {
       const { error } = await supabase.auth.exchangeCodeForSession(code)
       
       if (!error) {
-        console.log('Auth callback successful, redirecting to:', next)
+        // Redirecionar para home após trocar o código com sucesso
         return NextResponse.redirect(`${requestUrl.origin}${next}`)
       } else {
         console.error('Auth callback error:', error)
-        return NextResponse.redirect(`${requestUrl.origin}/auth/auth-code-error`)
+        return NextResponse.redirect(`${requestUrl.origin}/auth/login`)
       }
     } catch (err) {
       console.error('Auth callback exception:', err)
-      return NextResponse.redirect(`${requestUrl.origin}/auth/auth-code-error`)
+      return NextResponse.redirect(`${requestUrl.origin}/auth/login`)
     }
   }
 
-  // Se não tem code mas pode ter token no hash (implicit flow)
-  // Redireciona para uma página client-side que pode processar o hash
-  console.log('No code in callback, checking for implicit flow')
+  // Se não tem código, verificar se é implicit flow (token no hash)
+  // Como não podemos ler o hash no servidor, redirecionamos para o cliente
   return NextResponse.redirect(`${requestUrl.origin}/auth/callback-client`)
 }
