@@ -1,12 +1,12 @@
 'use client';
 
 import React from 'react';
-import Sidebar from '../../components/Sidebar';
-import Header from '../../components/Header';
-import WorkoutPost from '../../components/WorkoutPost';
+import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
+import WorkoutPost from '@/components/WorkoutPost';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../../contexts/AuthContext';
-import { FeedService, LikeService, CommentService, FollowService, type WodWithSocial, type Comment } from '../../lib/social';
+import { useAuth } from '@/contexts/AuthContext';
+import { FeedService, LikeService, CommentService, FollowService, type WodWithSocial, type Comment } from '@/lib/social';
 
 export default function HomePage() {
   const router = useRouter();

@@ -83,12 +83,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        // Se a tabela não existe, apenas log o erro mas não trava a aplicação
+        console.warn('Profile table might not exist yet. Run migrations in Supabase.', error)
+        // Criar um perfil mock para não travar a aplicação
+        setProfile({
+          id: userId,
+          email: user?.email || '',
+          name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuário',
+          username: user?.email?.split('@')[0] || `user_${userId.slice(0, 8)}`,
+          bio: null,
+          location: null,
+          avatar_url: user?.user_metadata?.avatar_url || null,
+          website: null,
+          is_premium: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          followers_count: 0,
+          following_count: 0,
+          wods_count: 0
+        } as any)
+        return
+      }
+      
       setProfile(data)
       console.log('Profile created successfully:', data)
     } catch (error) {
       console.error('Error creating profile:', error)
-      setProfile(null)
+      // Criar um perfil mock para não travar a aplicação
+      setProfile({
+        id: userId,
+        email: user?.email || '',
+        name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuário',
+        username: user?.email?.split('@')[0] || `user_${userId.slice(0, 8)}`,
+        bio: null,
+        location: null,
+        avatar_url: user?.user_metadata?.avatar_url || null,
+        website: null,
+        is_premium: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        followers_count: 0,
+        following_count: 0,
+        wods_count: 0
+      } as any)
     }
   }
 
