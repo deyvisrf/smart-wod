@@ -1,13 +1,51 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-// Client para uso geral (client-side)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Client lazy loading que funciona tanto no build quanto no runtime
+let supabaseClient: ReturnType<typeof createClient> | null = null
+
+export const getSupabaseClient = () => {
+  // Se já existe, retorna
+  if (supabaseClient) return supabaseClient
+
+  // Durante o build ou quando envs não estão disponíveis
+  if (!supabaseUrl || !supabaseAnonKey) {
+    if (typeof window === 'undefined') {
+      // Durante build do Vercel, retorna null
+      return null as any
+    }
+    // No runtime do browser, é um erro real
+    throw new Error('Missing Supabase environment variables')
+  }
+
+  // Criar client real
+  supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
+  return supabaseClient
+}
+
+// Função para obter client de forma segura
+export const getSupabaseClientSafe = () => {
+  try {
+    return getSupabaseClient()
+  } catch (error) {
+    console.error('Failed to get Supabase client:', error)
+    return null
+  }
+}
+
+// Client para uso geral - usando lazy loading
+export const supabase = (() => {
+  try {
+    return getSupabaseClient()
+  } catch {
+    return null as any
+  }
+})()
 
 // Client para componentes do cliente
-export const createSupabaseClient = () => createClient(supabaseUrl, supabaseAnonKey)
+export const createSupabaseClient = () => getSupabaseClientSafe()
 
 // Tipos para o banco de dados (serão expandidos conforme criamos as tabelas)
 export type Database = {

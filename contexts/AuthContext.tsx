@@ -1,8 +1,8 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
-import type { User, Session } from '@supabase/supabase-js'
+import { getSupabaseClientSafe } from '../lib/supabase'
+import type { User, Session, AuthChangeEvent } from '@supabase/supabase-js'
 import type { Database } from '../lib/supabase'
 
 type Profile = Database['public']['Tables']['profiles']['Row']
@@ -25,6 +25,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   const fetchProfile = async (userId: string) => {
+    const supabase = getSupabaseClientSafe()
+    if (!supabase) {
+      console.warn('Supabase client not available for fetchProfile')
+      return
+    }
+
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -49,6 +55,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const createProfile = async (userId: string) => {
+    const supabase = getSupabaseClientSafe()
+    if (!supabase) {
+      console.warn('Supabase client not available for createProfile')
+      return
+    }
+
     try {
       const { data: userData } = await supabase.auth.getUser()
       const user = userData.user
@@ -87,6 +99,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
+    const supabase = getSupabaseClientSafe()
+    if (!supabase) {
+      console.warn('Supabase client not available for signOut')
+      return
+    }
+
     try {
       await supabase.auth.signOut()
       setUser(null)
@@ -98,24 +116,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
+    const supabase = getSupabaseClientSafe()
+    
+    // Verificar se supabase está disponível
+    if (!supabase) {
+      console.error('Supabase client not available in AuthContext')
+      setLoading(false)
+      return
+    }
+
     // Obter sessão inicial
     const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setSession(session)
-      setUser(session?.user ?? null)
-      
-      if (session?.user) {
-        await fetchProfile(session.user.id)
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        setSession(session)
+        setUser(session?.user ?? null)
+        
+        if (session?.user) {
+          await fetchProfile(session.user.id)
+        }
+      } catch (error) {
+        console.error('Error getting initial session:', error)
+      } finally {
+        setLoading(false)
       }
-      
-      setLoading(false)
     }
 
     getInitialSession()
 
     // Escutar mudanças de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: AuthChangeEvent, session: Session | null) => {
+        console.log('Auth state change:', event, !!session)
         setSession(session)
         setUser(session?.user ?? null)
         
@@ -132,7 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe()
     }
-  }, [supabase.auth])
+  }, [])
 
   const value = {
     user,

@@ -1,33 +1,46 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '../../../lib/supabase';
+import { getSupabaseClientSafe } from '../../../lib/supabase';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import Image from 'next/image';
 
 export default function AuthPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [supabase] = useState(() => getSupabaseClientSafe());
 
   useEffect(() => {
+    if (!supabase) {
+      console.error('Supabase client not available in login page');
+      setLoading(false);
+      return;
+    }
+
     // Verificar se usuário já está logado
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        router.replace('/home');
-        return;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          router.replace('/home');
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking user session:', error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     checkUser();
 
     // Escutar mudanças de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: AuthChangeEvent, session: Session | null) => {
         if (event === 'SIGNED_IN' && session) {
           router.replace('/home');
         }
@@ -37,16 +50,18 @@ export default function AuthPage() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase.auth, router]);
+  }, [supabase, router]);
 
-  if (loading) {
+  if (loading || !supabase) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-purple-50">
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
             <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           </div>
-          <p className="text-gray-600">Carregando...</p>
+          <p className="text-gray-600">
+            {!supabase ? 'Configurando autenticação...' : 'Carregando...'}
+          </p>
         </div>
       </div>
     );

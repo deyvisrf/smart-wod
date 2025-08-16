@@ -136,7 +136,7 @@ export class LikeService {
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      return data.map(like => ({
+      return data.map((like: any) => ({
         ...like,
         user: like.user as any
       }))
@@ -201,7 +201,7 @@ export class CommentService {
         .order('created_at', { ascending: true })
 
       if (error) throw error
-      return data.map(comment => ({
+      return data.map((comment: any) => ({
         ...comment,
         user: comment.user as any
       }))
@@ -335,7 +335,7 @@ export class FollowService {
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      return data.map(follow => ({
+      return data.map((follow: any) => ({
         ...follow,
         follower: follow.follower as any
       }))
@@ -358,7 +358,7 @@ export class FollowService {
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      return data.map(follow => ({
+      return data.map((follow: any) => ({
         ...follow,
         following: follow.following as any
       }))
@@ -380,7 +380,7 @@ export class FeedService {
         .select('following_id')
         .eq('follower_id', userId)
 
-      const followingIds = following?.map(f => f.following_id) || []
+      const followingIds = following?.map((f: any) => f.following_id) || []
       const userIds = [userId, ...followingIds]
 
       // Buscar WODs do feed
@@ -400,7 +400,7 @@ export class FeedService {
       if (error) throw error
 
       // Processar dados para incluir informações sociais
-      return data.map(wod => ({
+      return data.map((wod: any) => ({
         id: wod.id,
         title: wod.title,
         user_id: wod.user_id,
@@ -432,7 +432,7 @@ export class FeedService {
 
       if (error) throw error
 
-      return data.map(wod => ({
+      return data.map((wod: any) => ({
         id: wod.id,
         title: wod.title,
         user_id: wod.user_id,
